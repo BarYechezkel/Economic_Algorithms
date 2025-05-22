@@ -4,12 +4,31 @@ import matplotlib.pyplot as plt
 class BirkhoffAlgo:
     # Birkhoff's algorithm for matrix decomposition
     def __init__(self, G):
-        # G: networkx.Graph with bipartite nodes and 'weight' on edges
         self.G = G.copy()
         self.steps = []  # list of (matching, p, remaining graph)
+        self.matching_probs = []
+
+    def check_balanced_graph(self):
+        # Ensure that all left and right nodes have the same total edge weight
+        left = {n for n, d in self.G.nodes(data=True) if d['bipartite'] == 0}
+        right = set(self.G.nodes()) - left
+
+        left_sums = [sum(self.G[u][v]['weight'] for v in self.G.neighbors(u)) for u in left]
+        right_sums = [sum(self.G[u][v]['weight'] for v in self.G.neighbors(u)) for u in right]
+
+        if len(set(left_sums)) != 1 or len(set(right_sums)) != 1:
+            print("Graph is not balanced — Birkhoff decomposition may fail.")
+            print("Left node sums:", left_sums)
+            print("Right node sums:", right_sums)
+            return False
+        if abs(left_sums[0] - right_sums[0]) > 1e-6:
+            print("Left and right totals do not match — invalid for Birkhoff.")
+            print("Left sum:", left_sums[0])
+            print("Right sum:", right_sums[0])
+            return False
+        return True
 
     def find_perfect_matching(self):
-        # uses Hopcroft-Karp to find maximum matching on bipartite graph
         from networkx.algorithms.bipartite import matching
         mate = matching.hopcroft_karp_matching(
             self.G,
@@ -17,11 +36,13 @@ class BirkhoffAlgo:
         )
         pairs = [(u, v) for u, v in mate.items() if self.G.nodes[u]['bipartite'] == 0]
         n = len({n for n, d in self.G.nodes(data=True) if d['bipartite'] == 0})
-        if len(pairs) != n:
-            return None
-        return pairs
+        return pairs if len(pairs) == n else None
 
     def decompose(self):
+        if not self.check_balanced_graph():
+            print("Decomposition aborted due to imbalance.")
+            return []
+
         j = 1
         total_weight = 0
         while True:
@@ -36,7 +57,7 @@ class BirkhoffAlgo:
             self.steps.append((X, p, self.G.copy()))
             for u, v in X:
                 w = self.G[u][v]['weight'] - p
-                if w <= 0:
+                if w <= 1e-8:
                     self.G.remove_edge(u, v)
                 else:
                     self.G[u][v]['weight'] = w
@@ -48,8 +69,9 @@ class BirkhoffAlgo:
 
         if self.G.number_of_edges() > 0:
             print("Graph is not empty — decomposition incomplete! This is NOT a full Birkhoff decomposition.")
+        else:
+            self.matching_probs = [(match, p / total_weight) for (match, p, _) in self.steps]
 
-        self.matching_probs = [(match, p / total_weight) for (match, p, _) in self.steps]
         return self.steps
 
     def plot_step(self, step_index):
@@ -69,11 +91,14 @@ class BirkhoffAlgo:
         plt.show()
 
     def print_final_result(self):
+        if not self.matching_probs:
+            print("\nNo valid decomposition — probabilities not computed.")
+            return
         print("\nFinal Decomposition with Probabilities:")
         for i, (matching, prob) in enumerate(self.matching_probs):
             print(f"Matching X{i+1}: {matching}  -->  Probability = {prob:.2f}")
 
-# Example usage:
+# Example usage
 if __name__ == '__main__':
     # create a balanced bipartite graph of size 4
     L = ['A', 'B', 'C', 'D']
