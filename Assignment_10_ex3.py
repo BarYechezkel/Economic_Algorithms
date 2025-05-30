@@ -35,6 +35,7 @@ def divided_cost(supporters: set[int], cost: float, balances: list[float]):
     for i in supporters:
         if balances[i] < need_to_pay:
             cannot_pay.add(i)
+
     can_pay = supporters - cannot_pay
     total_paid = 0.0
 
