@@ -57,8 +57,8 @@ if __name__ == "__main__":
     votes = [
         {"A", "B"},  # voter 1
         {"A"},       # voter 2
-        {"B","C"},  # voter 3ה
-        {"B","C"},  # voter 4
+        {"B","C"},   # voter 3
+        {"B","C"},   # voter 4
     ]
 
     balances = [40,40,40,40]
