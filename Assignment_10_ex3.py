@@ -1,9 +1,9 @@
 
 
 def elect_next_budget_item(
-        votes: list[set[str]],
-        balances: list[float],
-        costs: dict[str, float]):
+        votes: list[set[str]], # List of sets where each set contains items voted by a citizen
+        balances: list[float], # List of balances for each citizen
+        costs: dict[str, float]): # Dictionary mapping items to their costs
 
     item_votes: dict[str, set[str]] = {} # Dictionary to hold item votes
     for item in costs:
