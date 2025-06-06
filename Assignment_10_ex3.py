@@ -5,6 +5,94 @@ def elect_next_budget_item(
         balances: list[float], # List of balances for each citizen
         costs: dict[str, float]): # Dictionary mapping items to their costs
 
+    """
+    Elects budget items based on votes and available balances, printing the payment distribution.
+
+     regular case:
+     >>> votes = [{"A", "B"}, {"A"}, {"B","C"}, {"B","C"}]
+     >>> balances = [40, 40, 40, 40]
+     >>> costs = {"A": 60, "B": 48, "C": 45}
+     >>> elect_next_budget_item(votes, balances, costs)
+     Round 1: "A" is elected.
+     Citizen 1 pays 30.00 and has 10.00 remaining balance.
+     Citizen 2 pays 30.00 and has 10.00 remaining balance.
+     Round 2: "B" is elected.
+     Citizen 1 pays 10.00 and has 0.00 remaining balance.
+     Citizen 3 pays 19.00 and has 21.00 remaining balance.
+     Citizen 4 pays 19.00 and has 21.00 remaining balance.
+     Round 3: "C" cannot be funded due to insufficient funds.
+
+     project that cannot be funded at all, the voters
+     >>> votes = [{"A"}, {"A"}, {"A"}, {"A"}]
+     >>> balances = [10, 10, 10, 10]
+     >>> costs = {"A": 50}
+     >>> elect_next_budget_item(votes, balances, costs)
+     Round 1: "A" cannot be funded due to insufficient funds.
+
+    project with a single supporter who can pay all:
+     >>> votes = [{"A"}, set(), set(), set()]
+     >>> balances = [100, 0, 0, 0]
+     >>> costs = {"A": 80}
+     >>> elect_next_budget_item(votes, balances, costs)
+     Round 1: "A" is elected.
+     Citizen 1 pays 80.00 and has 20.00 remaining balance.
+
+    project that divides evenly among supporters:
+     >>> votes = [{"A"}, {"A"}]
+     >>> balances = [30, 30]
+     >>> costs = {"A": 60}
+     >>> elect_next_budget_item(votes, balances, costs)
+     Round 1: "A" is elected.
+     Citizen 1 pays 30.00 and has 0.00 remaining balance.
+     Citizen 2 pays 30.00 and has 0.00 remaining balance.
+
+     projet that one of the supporters cannot pay their share:
+     >>> votes = [{"A"}, {"A"}, {"A"}]
+     >>> balances = [10, 30, 30]
+     >>> costs = {"A": 60}
+     >>> elect_next_budget_item(votes, balances, costs)
+     Round 1: "A" is elected.
+     Citizen 1 pays 10.00 and has 0.00 remaining balance.
+     Citizen 2 pays 25.00 and has 5.00 remaining balance.
+     Citizen 3 pays 25.00 and has 5.00 remaining balance.
+
+     project with no supporters:
+     >>> votes = [set(), set()]
+     >>> balances = [50, 50]
+     >>> costs = {"A": 10}
+     >>> elect_next_budget_item(votes, balances, costs)
+     Round 1: "A" cannot be funded due to insufficient funds.
+
+         multiple projects all fundable:
+    >>> votes = [{"A", "B", "C"}, {"A", "C"}, {"B"}, {"C"}]
+    >>> balances = [100, 60, 40, 30]
+    >>> costs = {"A": 80, "B": 40, "C": 60}
+    >>> elect_next_budget_item(votes, balances, costs)
+    Round 1: "A" is elected.
+    Citizen 1 pays 40.00 and has 60.00 remaining balance.
+    Citizen 2 pays 40.00 and has 20.00 remaining balance.
+    Round 2: "B" is elected.
+    Citizen 1 pays 20.00 and has 40.00 remaining balance.
+    Citizen 3 pays 20.00 and has 20.00 remaining balance.
+    Round 3: "C" is elected.
+    Citizen 1 pays 20.00 and has 20.00 remaining balance.
+    Citizen 2 pays 20.00 and has 0.00 remaining balance.
+    Citizen 4 pays 20.00 and has 10.00 remaining balance.
+
+    mix of fundable and unfundable projects:
+    >>> votes = [{"A"}, {"B"}, {"C"}, {"D"}]
+    >>> balances = [20, 30, 10, 15]
+    >>> costs = {"A": 25, "B": 30, "C": 20, "D": 15}
+    >>> elect_next_budget_item(votes, balances, costs)
+    Round 1: "A" cannot be funded due to insufficient funds.
+    Round 2: "B" is elected.
+    Citizen 2 pays 30.00 and has 0.00 remaining balance.
+    Round 3: "C" cannot be funded due to insufficient funds.
+    Round 4: "D" is elected.
+    Citizen 4 pays 15.00 and has 0.00 remaining balance.
+    """
+
+
     item_votes: dict[str, set[str]] = {} # Dictionary to hold item votes
     for item in costs:
         item_votes[item] = set()
